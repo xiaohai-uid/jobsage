@@ -216,4 +216,80 @@ describe("CLI US1 commands", () => {
     expect(draftFile.revisionHistory).toHaveLength(1);
     expect(draftFile.resume.contentMd).toContain("Algorithmic thinking");
   });
+
+  it("export --format html writes a standalone HTML file", async () => {
+    process.env.JOBSAGE_WORKSPACE = dir;
+    process.env.JOBSAGE_PROVIDER = "mock";
+    const resumeJson = JSON.stringify({
+      resumeBullets: [
+        {
+          text: "Translated Menabrea's notes",
+          sourceRef: "profile.experiences.0.bullets.0",
+          relevance: 0.9,
+          uniqueness: 0.8,
+          coverLetterDependent: true,
+        },
+      ],
+    });
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([
+      JSON.stringify(mockEvaluation),
+      resumeJson,
+      "I will bring mathematical precision to your models.",
+    ]);
+    await main(["init", "--file", sampleProfile]);
+    await main(["posting", "add", "--file", sampleJd]);
+    const postingId = lastJson<{ data: { postingId: string } }>().data.postingId;
+    await main(["evaluate", "--posting", postingId]);
+    const evaluationId = lastJson<{ data: { evaluationId: string } }>().data.evaluationId;
+    await main(["draft", "--evaluation", evaluationId]);
+    const draftSetId = lastJson<{ data: { draftSetId: string } }>().data.draftSetId;
+
+    const outPath = join(dir, "resume.html");
+    const code = await main(["export", "--draft", draftSetId, "--format", "html", "--out", outPath]);
+    expect(code).toBe(ExitCode.OK);
+    const html = await readFile(outPath, "utf8");
+    expect(html).toContain("<!doctype html>");
+    expect(html).toContain("ada@example.com");
+  });
+
+  it("export --format pdf exits ENGINE(4) when renderer is unavailable offline", async () => {
+    if (process.env.JOBSAGE_TEST_RENDER === "1") return; // real browser may succeed
+    process.env.JOBSAGE_WORKSPACE = dir;
+    process.env.JOBSAGE_PROVIDER = "mock";
+    const resumeJson = JSON.stringify({
+      resumeBullets: [
+        {
+          text: "Translated Menabrea's notes",
+          sourceRef: "profile.experiences.0.bullets.0",
+          relevance: 0.9,
+          uniqueness: 0.8,
+          coverLetterDependent: true,
+        },
+      ],
+    });
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([
+      JSON.stringify(mockEvaluation),
+      resumeJson,
+      "I will bring mathematical precision to your models.",
+    ]);
+    await main(["init", "--file", sampleProfile]);
+    await main(["posting", "add", "--file", sampleJd]);
+    const postingId = lastJson<{ data: { postingId: string } }>().data.postingId;
+    await main(["evaluate", "--posting", postingId]);
+    const evaluationId = lastJson<{ data: { evaluationId: string } }>().data.evaluationId;
+    await main(["draft", "--evaluation", evaluationId]);
+    const draftSetId = lastJson<{ data: { draftSetId: string } }>().data.draftSetId;
+
+    const outPath = join(dir, "resume.pdf");
+    const code = await main(["export", "--draft", draftSetId, "--format", "pdf", "--out", outPath]);
+    if (code === ExitCode.ENGINE) {
+      // Renderer unavailable (e.g., no browser): the error path is correct.
+      await expect(readFile(outPath)).rejects.toThrow();
+    } else {
+      // Browser available: PDF export must succeed with PDF magic bytes.
+      expect(code).toBe(ExitCode.OK);
+      const pdf = await readFile(outPath);
+      expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+    }
+  });
 });

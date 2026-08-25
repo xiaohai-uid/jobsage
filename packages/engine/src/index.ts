@@ -43,7 +43,10 @@ export {
 } from "./adapters/mock.js";
 export { ClaudeAgentSdkLlmAdapter } from "./adapters/claude-agent-sdk.js";
 export { SystemClock, UlidLikeIdGenerator } from "./adapters/system.js";
+export { PlaywrightPdfAdapter } from "./adapters/playwright-pdf.js";
 
 // Render
 export { mdToSimpleHtml, renderDocument } from "./render/templates.js";
 export type { RenderInput, RenderOutput } from "./render/templates.js";
+export { renderPdf } from "./render/export.js";
+export type { RenderPdfInput } from "./render/export.js";

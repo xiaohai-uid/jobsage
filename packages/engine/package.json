@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.245",
+    "playwright": "^1.62.1",
     "zod": "^4.4.3"
   }
 }

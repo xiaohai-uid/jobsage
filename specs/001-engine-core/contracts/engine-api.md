@@ -15,18 +15,21 @@ export function evaluateFit(input: {
 export function draftApplication(input: {
   evaluation: FitEvaluation;
   profile: CandidateProfile;   // 与 evaluation.profileVersion 一致，否则抛 ProfileVersionMismatch
+  posting: JobPosting;         // 用于针对性裁剪与求职信
 }, deps: EngineDeps): Promise<ApplicationDraftSet>;
 
 // 评审+修订：草稿集 → 追加 reviewNotes / revisionHistory
 export function reviewAndRevise(input: {
   draftSet: ApplicationDraftSet;
   profile: CandidateProfile;
+  posting: JobPosting;         // 评审上下文（P0 无实时公司网络调研）
   mode: "review-only" | "review-and-revise";
 }, deps: EngineDeps): Promise<ApplicationDraftSet>;
 
 // 渲染导出：草稿集 → PDF 字节流（由 CLI 写盘并留痕）
 export function renderPdf(input: {
   draftSet: ApplicationDraftSet;
+  profile: CandidateProfile;   // 标题/联系方式来自档案
   document: "resume" | "cover-letter";
 }, deps: EngineDeps): Promise<Uint8Array>;
 ```

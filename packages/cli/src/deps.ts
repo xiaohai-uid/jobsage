@@ -44,22 +44,23 @@ function readMockIsolatedScript(): string[] | undefined {
   }
 }
 
-export function buildDeps(provider?: string): EngineDeps {
+export function buildDeps(provider?: string, opts?: { pdfRenderer?: import("@jobsage/engine").PdfRendererPort }): EngineDeps {
   const name = resolveProvider(provider);
+  const pdfRenderer = opts?.pdfRenderer ?? new NullPdfAdapter();
   if (name === "mock") {
     const isolated = readMockIsolatedScript();
     return {
       llm: new MockLlmAdapter(readMockScript(), {
         ...(isolated ? { isolatedScript: isolated } : {}),
       }),
-      pdfRenderer: new NullPdfAdapter(),
+      pdfRenderer,
       ids: new UlidLikeIdGenerator(),
       clock: new SystemClock(),
     };
   }
   return {
     llm: new ClaudeAgentSdkLlmAdapter(),
-    pdfRenderer: new NullPdfAdapter(),
+    pdfRenderer,
     ids: new UlidLikeIdGenerator(),
     clock: new SystemClock(),
   };

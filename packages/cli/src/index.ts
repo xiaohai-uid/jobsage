@@ -9,6 +9,7 @@ import { Command, CommanderError } from "commander";
 import { ENGINE_VERSION } from "@jobsage/engine";
 import { registerDraft } from "./commands/draft.js";
 import { registerEvaluate } from "./commands/evaluate.js";
+import { registerExport } from "./commands/export.js";
 import { registerInit } from "./commands/init.js";
 import { registerPosting } from "./commands/posting.js";
 import { registerReview } from "./commands/review.js";
@@ -25,6 +26,7 @@ export async function main(argv: string[]): Promise<number> {
   registerEvaluate(program);
   registerDraft(program);
   registerReview(program);
+  registerExport(program);
   program.exitOverride();
 
   try {
