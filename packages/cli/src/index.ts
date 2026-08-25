@@ -7,6 +7,7 @@
 import { pathToFileURL } from "node:url";
 import { Command, CommanderError } from "commander";
 import { ENGINE_VERSION } from "@jobsage/engine";
+import { registerDraft } from "./commands/draft.js";
 import { registerEvaluate } from "./commands/evaluate.js";
 import { registerInit } from "./commands/init.js";
 import { registerPosting } from "./commands/posting.js";
@@ -21,6 +22,7 @@ export async function main(argv: string[]): Promise<number> {
   registerInit(program);
   registerPosting(program);
   registerEvaluate(program);
+  registerDraft(program);
   program.exitOverride();
 
   try {

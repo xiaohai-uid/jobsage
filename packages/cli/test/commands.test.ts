@@ -105,4 +105,50 @@ describe("CLI US1 commands", () => {
     expect(out.error.code).toBe("E3");
     expect(out.error.hint).toContain("ANTHROPIC_API_KEY");
   });
+
+  it("draft writes a draft-set, resume.md and cover-letter.md under mock provider", async () => {
+    process.env.JOBSAGE_WORKSPACE = dir;
+    process.env.JOBSAGE_PROVIDER = "mock";
+    const resumeJson = JSON.stringify({
+      resumeBullets: [
+        {
+          text: "Translated Menabrea's notes",
+          sourceRef: "profile.experiences.0.bullets.0",
+          relevance: 0.9,
+          uniqueness: 0.8,
+          coverLetterDependent: true,
+        },
+        {
+          text: "Published the first machine algorithm",
+          sourceRef: "profile.experiences.0.bullets.1",
+          relevance: 0.9,
+          uniqueness: 0.9,
+          coverLetterDependent: false,
+        },
+      ],
+    });
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([
+      JSON.stringify(mockEvaluation),
+      resumeJson,
+      "I will bring mathematical precision to your models.",
+    ]);
+    await main(["init", "--file", sampleProfile]);
+    const addOut = await main(["posting", "add", "--file", sampleJd]);
+    expect(addOut).toBe(ExitCode.OK);
+    const postingId = lastJson<{ data: { postingId: string } }>().data.postingId;
+    const evalCode = await main(["evaluate", "--posting", postingId]);
+    expect(evalCode).toBe(ExitCode.OK);
+    const evaluationId = lastJson<{ data: { evaluationId: string } }>().data.evaluationId;
+
+    const code = await main(["draft", "--evaluation", evaluationId]);
+    expect(code).toBe(ExitCode.OK);
+    const out = lastJson<{ data: { draftSetId: string; cutCount: number; disclosureEnabled: boolean } }>();
+    expect(out.data.cutCount).toBe(0);
+    expect(out.data.disclosureEnabled).toBe(true);
+    const resume = await readFile(
+      join(dir, "applications", out.data.draftSetId, "resume.md"),
+      "utf8",
+    );
+    expect(resume).toMatch(/\[ref:profile\.experiences/);
+  });
 });
