@@ -1,0 +1,26 @@
+{
+  "name": "@jobsage/engine",
+  "version": "0.1.0",
+  "description": "JobSage core engine: candidate profile, fit evaluation, tailored draft workflows. Pure library — no UI, no network transport.",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  }
+}

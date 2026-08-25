@@ -1,0 +1,21 @@
+{
+  "name": "jobsage",
+  "private": true,
+  "version": "0.1.0",
+  "description": "JobSage (谋职) — local-first AI job application copilot. Human-in-command: drafts only, never sends.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@10.12.1",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "vitest run",
+    "check": "node tools/compliance-check.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.1.0"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "name": "@jobsage/cli",
+  "version": "0.1.0",
+  "description": "JobSage CLI — the first canonical interface to the engine (init/evaluate/draft/review/export).",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "jobsage": "./dist/index.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@jobsage/engine": "workspace:*"
+  }
+}

@@ -1,0 +1,17 @@
+JobSage (谋职)
+==============
+
+This product is derived from and built upon the open-source project:
+
+    ai-job-search
+    https://github.com/MadsLorentzen/ai-job-search
+    Copyright (c) 2026 Mads Lorentzen
+    Licensed under the MIT License
+
+The upstream project's MIT license requires that its copyright notice accompany
+all copies or substantial portions of the Software. JobSage ports the upstream
+job-application workflow semantics (candidate profiling, job fit evaluation,
+relevance-weighted CV tailoring, drafter-reviewer pipeline) into a TypeScript
+engine, with documented divergences recorded in specs/.
+
+JobSage itself is also released under the MIT License (see LICENSE).
