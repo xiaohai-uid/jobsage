@@ -21,6 +21,8 @@
     "clean": "rm -rf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@jobsage/engine": "workspace:*"
+    "@jobsage/engine": "workspace:*",
+    "commander": "^15.0.0",
+    "yaml": "^2.9.0"
   }
 }

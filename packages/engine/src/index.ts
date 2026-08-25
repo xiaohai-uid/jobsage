@@ -7,3 +7,39 @@
  */
 export const ENGINE_NAME = "jobsage-engine" as const;
 export const ENGINE_VERSION = "0.1.0" as const;
+
+// Domain
+export * from "./domain/schemas.js";
+
+// Ports (types + errors)
+export type {
+  ClockPort,
+  EngineDeps,
+  IdGeneratorPort,
+  LlmPort,
+  LlmRequest,
+  PdfRendererPort,
+} from "./ports/index.js";
+export {
+  ProfileVersionMismatchError,
+  RendererUnavailableError,
+  SchemaViolationError,
+} from "./ports/index.js";
+
+// Workflows
+export { evaluateFit } from "./workflows/evaluate.js";
+export type { EvaluateInput } from "./workflows/evaluate.js";
+
+// Adapters
+export {
+  FixedClock,
+  MockLlmAdapter,
+  NullPdfAdapter,
+  SequentialIdGenerator,
+} from "./adapters/mock.js";
+export { ClaudeAgentSdkLlmAdapter } from "./adapters/claude-agent-sdk.js";
+export { SystemClock, UlidLikeIdGenerator } from "./adapters/system.js";
+
+// Render
+export { mdToSimpleHtml, renderDocument } from "./render/templates.js";
+export type { RenderInput, RenderOutput } from "./render/templates.js";

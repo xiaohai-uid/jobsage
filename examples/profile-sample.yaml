@@ -1,0 +1,32 @@
+# JobSage sample profile (YAML) — P0 US1 demo data
+id: profile
+name: Ada Lovelace
+contact:
+  email: ada@example.com
+  phone: "+1 555 0100"
+  location: London, UK
+education:
+  - institution: University of London
+    degree: BSc Mathematics
+    field: Mathematics
+    start: "1832"
+    highlights:
+      - Notes on the Analytical Engine (with L. F. Menabrea)
+experiences:
+  - org: Analytical Engines Ltd
+    title: Mathematician
+    start: "1833"
+    end: "1843"
+    bullets:
+      - Translated and expanded Menabrea's sketch of the Analytical Engine
+      - Published the first algorithm intended for machine execution
+skills:
+  - Mathematics
+  - Algorithmic thinking
+  - Technical writing
+portfolioLinks:
+  - label: Notes on the Analytical Engine
+    url: https://example.com/notes
+writingStyleSample: I prefer precise, measured prose with a clear logical thread.
+locale: en
+version: 1

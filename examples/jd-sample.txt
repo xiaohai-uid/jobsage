@@ -1,0 +1,18 @@
+Senior Algorithm Engineer (Mathematical Modelling)
+
+Example Corp — London, UK (Hybrid, 2 days on-site)
+
+About the role
+We build numerical models for energy systems. You will design algorithms,
+analyse mathematical properties, and collaborate with engineers to ship
+production simulations.
+
+Requirements
+- Strong mathematics background (linear algebra, numerical methods)
+- Algorithmic thinking and clean implementation skills
+- Experience with technical writing / specifications
+- Familiarity with Kubernetes is a plus but not required
+
+Nice to have
+- Python or TypeScript
+- Experience in energy or scientific computing

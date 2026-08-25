@@ -46,3 +46,7 @@ export function fail(code: number, message: string, hint?: string): EnvelopeFail
 export function serializeEnvelope(env: Envelope<unknown>): string {
   return JSON.stringify(env, null, 2);
 }
+
+export function printEnvelope(env: Envelope<unknown>): void {
+  console.log(serializeEnvelope(env));
+}
