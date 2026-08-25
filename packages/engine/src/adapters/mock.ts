@@ -16,9 +16,14 @@ export class MockLlmAdapter implements LlmPort {
   private generateCalls = 0;
   private isolatedCalls = 0;
   private readonly script: readonly string[];
+  private readonly isolatedScript: readonly string[] | undefined;
 
-  constructor(script: readonly string[] = []) {
+  constructor(
+    script: readonly string[] = [],
+    options: { isolatedScript?: readonly string[] } = {},
+  ) {
     this.script = script;
+    this.isolatedScript = options.isolatedScript;
   }
 
   async generate(_req: LlmRequest): Promise<{ text: string }> {
@@ -28,7 +33,8 @@ export class MockLlmAdapter implements LlmPort {
 
   async generateIsolated(_req: LlmRequest): Promise<{ text: string }> {
     const idx = this.isolatedCalls++;
-    return { text: this.script[idx] ?? `mock isolated #${idx}` };
+    const src = this.isolatedScript ?? this.script;
+    return { text: src[idx] ?? `mock isolated #${idx}` };
   }
 
   get generateCount(): number {

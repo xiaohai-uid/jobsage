@@ -140,6 +140,10 @@ describe("CLI US1 commands", () => {
     expect(evalCode).toBe(ExitCode.OK);
     const evaluationId = lastJson<{ data: { evaluationId: string } }>().data.evaluationId;
 
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([
+      resumeJson,
+      "I will bring mathematical precision to your models.",
+    ]);
     const code = await main(["draft", "--evaluation", evaluationId]);
     expect(code).toBe(ExitCode.OK);
     const out = lastJson<{ data: { draftSetId: string; cutCount: number; disclosureEnabled: boolean } }>();
@@ -150,5 +154,66 @@ describe("CLI US1 commands", () => {
       "utf8",
     );
     expect(resume).toMatch(/\[ref:profile\.experiences/);
+  });
+
+  it("review --revise applies isolated reviewer notes and records history", async () => {
+    process.env.JOBSAGE_WORKSPACE = dir;
+    process.env.JOBSAGE_PROVIDER = "mock";
+    const resumeJson = JSON.stringify({
+      resumeBullets: [
+        {
+          text: "Translated Menabrea's notes",
+          sourceRef: "profile.experiences.0.bullets.0",
+          relevance: 0.9,
+          uniqueness: 0.8,
+          coverLetterDependent: true,
+        },
+      ],
+    });
+    const notesJson = JSON.stringify({
+      reviewNotes: [
+        {
+          dimension: "keyword",
+          issue: "Missing algorithmic language",
+          suggestion: "Emphasize algorithmic thinking",
+        },
+      ],
+    });
+    const reviseJson = JSON.stringify({
+      resumeMd: "- [ref:profile.experiences.0.bullets.0] Translated Menabrea's notes\n- [ref:profile.skills.1] Algorithmic thinking",
+      coverLetterMd: "Dear team,\n\nI will bring algorithmic thinking to your models.",
+    });
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([
+      JSON.stringify(mockEvaluation),
+      resumeJson,
+      "I will bring mathematical precision to your models.",
+      reviseJson,
+    ]);
+    process.env.JOBSAGE_MOCK_ISOLATED_RESPONSES = JSON.stringify([notesJson]);
+
+    await main(["init", "--file", sampleProfile]);
+    const addOut = await main(["posting", "add", "--file", sampleJd]);
+    expect(addOut).toBe(ExitCode.OK);
+    const postingId = lastJson<{ data: { postingId: string } }>().data.postingId;
+    await main(["evaluate", "--posting", postingId]);
+    const evaluationId = lastJson<{ data: { evaluationId: string } }>().data.evaluationId;
+    await main(["draft", "--evaluation", evaluationId]);
+    const draftSetId = lastJson<{ data: { draftSetId: string } }>().data.draftSetId;
+
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([reviseJson]);
+    process.env.JOBSAGE_MOCK_ISOLATED_RESPONSES = JSON.stringify([notesJson]);
+    const code = await main(["review", "--draft", draftSetId, "--revise"]);
+    expect(code).toBe(ExitCode.OK);
+    const out = lastJson<{ data: { notesCount: number; revised: boolean; revisionHistoryCount: number } }>();
+    expect(out.data.notesCount).toBe(1);
+    expect(out.data.revised).toBe(true);
+    expect(out.data.revisionHistoryCount).toBe(1);
+
+    const draftFile = JSON.parse(
+      await readFile(join(dir, "applications", draftSetId, "draft-set.json"), "utf8"),
+    ) as { reviewNotes: unknown[]; revisionHistory: unknown[]; resume: { contentMd: string } };
+    expect(draftFile.reviewNotes).toHaveLength(1);
+    expect(draftFile.revisionHistory).toHaveLength(1);
+    expect(draftFile.resume.contentMd).toContain("Algorithmic thinking");
   });
 });

@@ -32,11 +32,26 @@ function readMockScript(): string[] {
   }
 }
 
+function readMockIsolatedScript(): string[] | undefined {
+  const raw = process.env.JOBSAGE_MOCK_ISOLATED_RESPONSES;
+  if (!raw) return undefined;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.map(String);
+    return [String(parsed)];
+  } catch {
+    return undefined;
+  }
+}
+
 export function buildDeps(provider?: string): EngineDeps {
   const name = resolveProvider(provider);
   if (name === "mock") {
+    const isolated = readMockIsolatedScript();
     return {
-      llm: new MockLlmAdapter(readMockScript()),
+      llm: new MockLlmAdapter(readMockScript(), {
+        ...(isolated ? { isolatedScript: isolated } : {}),
+      }),
       pdfRenderer: new NullPdfAdapter(),
       ids: new UlidLikeIdGenerator(),
       clock: new SystemClock(),

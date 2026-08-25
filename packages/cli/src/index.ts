@@ -11,6 +11,7 @@ import { registerDraft } from "./commands/draft.js";
 import { registerEvaluate } from "./commands/evaluate.js";
 import { registerInit } from "./commands/init.js";
 import { registerPosting } from "./commands/posting.js";
+import { registerReview } from "./commands/review.js";
 import { ExitCode, fail, serializeEnvelope } from "./io.js";
 
 export async function main(argv: string[]): Promise<number> {
@@ -23,6 +24,7 @@ export async function main(argv: string[]): Promise<number> {
   registerPosting(program);
   registerEvaluate(program);
   registerDraft(program);
+  registerReview(program);
   program.exitOverride();
 
   try {

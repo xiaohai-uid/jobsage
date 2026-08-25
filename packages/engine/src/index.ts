@@ -31,6 +31,8 @@ export { evaluateFit } from "./workflows/evaluate.js";
 export type { EvaluateInput } from "./workflows/evaluate.js";
 export { draftApplication, DEFAULT_DISCLOSURE_TEXT } from "./workflows/draft.js";
 export type { DraftInput } from "./workflows/draft.js";
+export { reviewAndRevise } from "./workflows/review-revise.js";
+export type { ReviewReviseInput } from "./workflows/review-revise.js";
 
 // Adapters
 export {
