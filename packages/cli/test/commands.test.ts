@@ -292,4 +292,20 @@ describe("CLI US1 commands", () => {
       expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     }
   });
+
+  it("evaluate with domestic provider and no key exits CONFIG(3) with env hint", async () => {
+    process.env.JOBSAGE_WORKSPACE = dir;
+    delete process.env.JOBSAGE_PROVIDER;
+    delete process.env.DEEPSEEK_API_KEY;
+    await main(["init", "--file", sampleProfile]);
+    const addOut = await main(["posting", "add", "--file", sampleJd]);
+    expect(addOut).toBe(ExitCode.OK);
+    const postingId = lastJson<{ data: { postingId: string } }>().data.postingId;
+
+    const code = await main(["evaluate", "--posting", postingId, "--provider", "deepseek"]);
+    expect(code).toBe(ExitCode.CONFIG);
+    const out = lastJson<{ ok: boolean; error: { hint?: string } }>();
+    expect(out.ok).toBe(false);
+    expect(out.error.hint).toContain("DEEPSEEK_API_KEY");
+  });
 });

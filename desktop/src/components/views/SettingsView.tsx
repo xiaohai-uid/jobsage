@@ -38,6 +38,9 @@ export function SettingsView({ data, actions }: ViewProps) {
             <option value="mock">mock — local, deterministic</option>
             <option value="claude-agent-sdk">claude-agent-sdk</option>
             <option value="auto">auto — SDK when key present</option>
+            <option value="deepseek">deepseek (DeepSeek)</option>
+            <option value="qwen">qwen (DashScope)</option>
+            <option value="glm">glm (Zhipu)</option>
           </select>
           <Icon n="chevron" size={14} />
         </div>
@@ -52,7 +55,10 @@ export function SettingsView({ data, actions }: ViewProps) {
               JobSage never asks for or stores an API key. If you pick a provider that needs one,
               it is read from your environment (
               <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>ANTHROPIC_API_KEY</code>
-              ) at runtime — it never touches your workspace.
+              for Claude, or <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>DEEPSEEK_API_KEY</code> /{' '}
+              <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>DASHSCOPE_API_KEY</code> /{' '}
+              <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>ZHIPU_API_KEY</code>
+              for domestic providers) at runtime — it never touches your workspace.
             </p>
           </div>
         </div>

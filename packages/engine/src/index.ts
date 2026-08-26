@@ -42,6 +42,10 @@ export {
   SequentialIdGenerator,
 } from "./adapters/mock.js";
 export { ClaudeAgentSdkLlmAdapter } from "./adapters/claude-agent-sdk.js";
+export { OpenAiCompatibleLlmAdapter } from "./adapters/openai-compatible.js";
+export type { OpenAiCompatibleConfig } from "./adapters/openai-compatible.js";
+export { PROVIDER_IDS, resolveProvider } from "./adapters/providers.js";
+export type { ProviderMeta } from "./adapters/providers.js";
 export { SystemClock, UlidLikeIdGenerator } from "./adapters/system.js";
 export { PlaywrightPdfAdapter } from "./adapters/playwright-pdf.js";
 

@@ -12,7 +12,7 @@ import {
   SchemaViolationError,
   draftApplication,
 } from "@jobsage/engine";
-import { buildDeps } from "../deps.js";
+import { buildDeps, providerApiKeyEnvVar } from "../deps.js";
 import { ExitCode, fail, ok, printEnvelope } from "../io.js";
 import {
   appendAudit,
@@ -53,12 +53,17 @@ export function registerDraft(program: Command): void {
           );
 
           const deps = buildDeps(opts.provider);
-          if (deps.llm.constructor.name === "ClaudeAgentSdkLlmAdapter" && !process.env.ANTHROPIC_API_KEY) {
+          const keyEnv = providerApiKeyEnvVar(
+            deps.llm.constructor.name === "ClaudeAgentSdkLlmAdapter"
+              ? "claude-agent-sdk"
+              : (opts.provider ?? process.env.JOBSAGE_PROVIDER ?? "claude-agent-sdk"),
+          );
+          if (keyEnv && !process.env[keyEnv]) {
             printEnvelope(
               fail(
                 ExitCode.CONFIG,
-                "ANTHROPIC_API_KEY is not set",
-                "export ANTHROPIC_API_KEY=sk-... or run with --provider mock",
+                `${keyEnv} is not set`,
+                `export ${keyEnv}=sk-... or run with --provider mock`,
               ),
             );
             process.exitCode = ExitCode.CONFIG;

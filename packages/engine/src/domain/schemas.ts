@@ -144,7 +144,13 @@ export const ApplicationDraftSetSchema = z.object({
 });
 
 export const ProviderConfigSchema = z.object({
-  providerId: z.enum(["claude-agent-sdk", "mock"]),
+  providerId: z.enum([
+    "deepseek",
+    "qwen",
+    "glm",
+    "claude-agent-sdk",
+    "mock",
+  ]),
   model: z.string().min(1),
   apiKeyEnvVar: z.string().min(1), // variable name, never the key value
   baseUrl: z.string().url().optional(),

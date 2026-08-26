@@ -7,7 +7,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 export interface AppSettings {
   workspacePath: string;
-  provider: "auto" | "mock" | "claude-agent-sdk";
+  provider: "auto" | "mock" | "claude-agent-sdk" | "deepseek" | "qwen" | "glm";
 }
 
 export interface CliEnvelope<T = unknown> {

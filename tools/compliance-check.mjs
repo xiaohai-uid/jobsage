@@ -31,6 +31,7 @@ export const TRANSPORT_PATTERNS = [
 // must be offline (constitution Principle III/IV).
 const NETWORK_WHITELIST = new Set([
   "packages/engine/src/adapters/claude-agent-sdk.ts",
+  "packages/engine/src/adapters/openai-compatible.ts",
 ]);
 
 export function findForbiddenTransports(source, filePath) {

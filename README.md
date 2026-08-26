@@ -36,13 +36,29 @@ jobsage review --draft <draftSetId> --revise
 jobsage export --draft <draftSetId> --format html --out resume.html
 ```
 
-## Real inference
+## Real inference (BYOK)
+
+Bring your own key — JobSage reads the provider key from the environment and
+never stores it. Choose a provider with `--provider <id>` (or the desktop
+Settings screen):
+
+| provider | env var | default model | endpoint |
+|---|---|---|---|
+| claude-agent-sdk | `ANTHROPIC_API_KEY` | Claude | Anthropic |
+| deepseek | `DEEPSEEK_API_KEY` | deepseek-chat | api.deepseek.com |
+| qwen | `DASHSCOPE_API_KEY` | qwen-plus | DashScope compatible-mode |
+| glm | `ZHIPU_API_KEY` | glm-4-plus | open.bigmodel.cn/api/paas/v4 |
 
 ```bash
 unset JOBSAGE_PROVIDER
-export ANTHROPIC_API_KEY=sk-...
-# same commands as above
+export DEEPSEEK_API_KEY=sk-...
+jobsage evaluate --posting <postingId> --provider deepseek
+# or mock for offline/demos
+export JOBSAGE_PROVIDER=mock
 ```
+
+Real inference is env-gated in tests: set `JOBSAGE_TEST_LIVE=1` plus a provider
+key to run the live evaluate→draft end-to-end suite.
 
 ## Testing & compliance
 

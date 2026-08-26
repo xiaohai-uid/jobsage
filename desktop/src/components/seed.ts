@@ -141,6 +141,9 @@ export const PROVIDER_DESC: Record<ProviderId, string> = {
   mock: 'Deterministic local analysis with no network calls — useful for demos and tests.',
   'claude-agent-sdk': 'Runs evaluation and drafting through the Claude Agent SDK on this machine.',
   auto: 'Uses the SDK when an environment key is present, otherwise falls back to mock.',
+  deepseek: 'DeepSeek via OpenAI-compatible endpoint. Needs DEEPSEEK_API_KEY in the environment.',
+  qwen: 'Qwen (DashScope) via OpenAI-compatible endpoint. Needs DASHSCOPE_API_KEY in the environment.',
+  glm: 'GLM (Zhipu) via OpenAI-compatible endpoint. Needs ZHIPU_API_KEY in the environment.',
 };
 
 export function nowTime(): string {
