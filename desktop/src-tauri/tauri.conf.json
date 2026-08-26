@@ -25,10 +25,11 @@
   "bundle": {
     "active": true,
     "targets": [
-      "deb",
-      "appimage"
+      "nsis",
+      "msi"
     ],
     "icon": [
+      "icons/icon.ico",
       "icons/icon.png"
     ],
     "resources": [
