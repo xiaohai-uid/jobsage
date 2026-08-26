@@ -209,12 +209,13 @@ export function createDefaultData(): AppData {
       education: [{ school: 'University of Washington', degree: 'BSc Computer Science', years: '2014 – 2018' }],
       skills: ['TypeScript', 'React', 'Node.js', 'Design Systems', 'Accessibility', 'GraphQL', 'Testing', 'Vite', 'Rust'],
     },
-    jd: { text: SAMPLE_JD, status: 'done', result: SAMPLE_RESULT },
+    jd: { text: SAMPLE_JD, status: 'idle', result: null, evaluationId: null },
     drafts: {
       resume: RESUME_MD,
       cover: COVER_MD,
       disclosure: true,
       savedAt: '9:41 AM',
+      draftSetId: null,
       cutLog: CUT_LOG_SEED.map((c) => ({ ...c })),
     },
     exports: [

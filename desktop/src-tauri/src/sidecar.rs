@@ -73,10 +73,13 @@ pub fn parse_allowed(argv: &[String]) -> Result<AllowedCommand, String> {
     }
 }
 
-/// Run the sidecar CLI once. `cli` points to the executable (node in dev,
-/// Bun-compiled binary in release). Returns parsed stdout JSON envelope.
+/// Run the sidecar CLI once.
+/// `program` is the executable (node in dev, Bun-compiled binary in release);
+/// `base` is the fixed prefix before the user-facing argv (e.g.
+/// [".../cli/dist/index.js"] in dev, empty in release).
 pub fn run_jobsage(
-    cli: &Path,
+    program: &Path,
+    base: &[String],
     argv: &[String],
     cwd: &Path,
     stdin: Option<&str>,
@@ -84,8 +87,9 @@ pub fn run_jobsage(
 ) -> Result<Value, String> {
     let _allowed = parse_allowed(argv)?;
 
-    let mut cmd = Command::new(cli);
-    cmd.args(argv)
+    let mut cmd = Command::new(program);
+    cmd.args(base)
+        .args(argv)
         .current_dir(cwd)
         .stdin(if stdin.is_some() { Stdio::piped() } else { Stdio::null() })
         .stdout(Stdio::piped())

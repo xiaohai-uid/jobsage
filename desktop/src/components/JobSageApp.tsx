@@ -14,7 +14,6 @@ import {
   FOLDER_OPTIONS,
   IMPORT_SAMPLE_YAML,
   NAV_ITEMS,
-  SAMPLE_RESULT,
   createDefaultData,
   nowTime,
 } from './seed';
@@ -26,6 +25,22 @@ import { EvaluateView } from './views/EvaluateView';
 import { DraftView } from './views/DraftView';
 import { ExportView } from './views/ExportView';
 import { SettingsView } from './views/SettingsView';
+import {
+  buildDraftArgs,
+  buildEvaluateArgs,
+  buildExportArgs,
+  buildPostingAddStdioArgs,
+  readWorkspaceFile,
+  runCli,
+  saveSettings,
+  writeWorkspaceFile,
+} from '../commands';
+import {
+  mapEvaluationToResult,
+  mapProfileToUi,
+  type EngineEvaluation,
+  type EngineProfile,
+} from '../engineMapper';
 
 /* ------------------------------------------------------------------ */
 /* Loading & persistence                                               */
@@ -81,6 +96,7 @@ export function JobSageApp(props: JobSageAppProps = {}) {
   const [data, setData] = useState<AppData>(() => loadInitial(props));
   const [modal, setModal] = useState<ModalId>(null);
   const [toasts, setToasts] = useState<ToastItem[]>([]);
+  const [importText, setImportText] = useState(IMPORT_SAMPLE_YAML);
   const evalTimer = useRef<number | null>(null);
 
   /* Persist one object per change — same contract as the prototype. */
@@ -113,7 +129,16 @@ export function JobSageApp(props: JobSageAppProps = {}) {
     navigate: (view) => setData((d) => ({ ...d, view })),
     openModal: (m) => setModal(m),
     closeModal: () => setModal(null),
-    update: (patch) => setData((d) => ({ ...d, ...patch })),
+    update: (patch) => {
+      setData((d) => ({ ...d, ...patch }));
+      // Persist provider/workspace changes to the desktop settings file.
+      if (patch.provider !== undefined || patch.workspace !== undefined) {
+        void saveSettings({
+          workspacePath: patch.workspace ?? data.workspace ?? '',
+          provider: patch.provider ?? data.provider,
+        }).catch(() => undefined);
+      }
+    },
 
     toast,
 
@@ -124,36 +149,159 @@ export function JobSageApp(props: JobSageAppProps = {}) {
         recents: [{ path, last: 'Just now' }, ...d.recents.filter((r) => r.path !== path)].slice(0, 4),
         view: 'profile',
       }));
+      void saveSettings({ workspacePath: path, provider: data.provider }).catch(() => undefined);
       setModal(null);
       toast('Workspace ready — drafts live on this machine');
     },
 
-    evaluate: () => {
+    evaluate: async () => {
       if (data.jd.status === 'running') return;
-      setData((d) => ({ ...d, jd: { ...d.jd, status: 'running' } }));
-      /* Deterministic local mock — swap for the real provider pipeline here. */
-      evalTimer.current = window.setTimeout(() => {
-        setData((d) => ({ ...d, jd: { ...d.jd, status: 'done', result: SAMPLE_RESULT } }));
-      }, 1600);
+      const ws = data.workspace;
+      if (!ws) {
+        toast('Choose a workspace first', 'info');
+        return;
+      }
+      setData((d) => ({ ...d, jd: { ...d.jd, status: 'running', result: null } }));
+      try {
+        const provider = data.provider === 'auto' ? 'mock' : data.provider;
+        const add = await runCli(buildPostingAddStdioArgs(ws), { stdin: data.jd.text });
+        if (!add.ok || !add.data) throw new Error(add.error?.message ?? 'posting add failed');
+        const postingId = (add.data as { postingId: string }).postingId;
+        const ev = await runCli(buildEvaluateArgs(postingId, ws, provider));
+        if (!ev.ok || !ev.data) throw new Error(ev.error?.message ?? 'evaluate failed');
+        const evaluationId = (ev.data as { evaluationId: string }).evaluationId;
+        const raw = await readWorkspaceFile(`evaluations/${evaluationId}/evaluation.json`);
+        const evaluation = JSON.parse(raw) as EngineEvaluation;
+        setData((d) => ({
+          ...d,
+          jd: {
+            ...d.jd,
+            status: 'done',
+            result: mapEvaluationToResult(evaluation),
+            evaluationId,
+          },
+        }));
+        toast('Evaluation complete');
+      } catch (err) {
+        setData((d) => ({ ...d, jd: { ...d.jd, status: 'done', result: null } }));
+        toast(err instanceof Error ? err.message : String(err), 'info');
+      }
     },
 
     saveProfile: () => {
-      setData((d) => ({
-        ...d,
-        profile: { ...d.profile, version: d.profile.version + 1, savedAt: nowTime() },
-      }));
-      toast(`Profile saved to profile.yaml · v${data.profile.version + 1}`);
+      const ws = data.workspace;
+      if (!ws) {
+        toast('Choose a workspace first', 'info');
+        return;
+      }
+      setData((d) => ({ ...d, profile: { ...d.profile, version: d.profile.version + 1, savedAt: nowTime() } }));
+      const profile: EngineProfile = {
+        name: data.profile.name,
+        contact: { email: data.profile.email, location: data.profile.location },
+        education: data.profile.education.map((e) => ({
+          institution: e.school,
+          degree: e.degree.split(' — ')[0] ?? e.degree,
+          field: e.degree.split(' — ')[1] ?? '',
+          start: e.years,
+        })),
+        experiences: data.profile.experience.map((e) => ({
+          org: e.company,
+          title: e.role,
+          start: e.years.split('–')[0] ?? e.years,
+          end: e.years.split('–')[1] !== 'present' ? e.years.split('–')[1] : undefined,
+          bullets: e.highlights ? e.highlights.split('; ').filter(Boolean) : [],
+        })),
+        skills: data.profile.skills,
+        version: data.profile.version + 1,
+      };
+      void writeWorkspaceFile('profile/profile.json', JSON.stringify(profile, null, 2))
+        .then(() => toast(`Profile saved to profile.json · v${data.profile.version + 1}`))
+        .catch((e) => toast(String(e), 'info'));
     },
 
-    importProfile: () => {
+    importProfile: async (text: string) => {
       setModal(null);
-      setData((d) => ({ ...d, profile: { ...d.profile, lastImport: 'profile.yaml (pasted)' } }));
-      toast('Profile imported — review it, then save');
+      const ws = data.workspace;
+      if (!ws) {
+        toast('Choose a workspace first', 'info');
+        return;
+      }
+      try {
+        await writeWorkspaceFile('profile/imported-profile.yaml', text);
+        const init = await runCli([
+          'init', '--file', `${ws}/profile/imported-profile.yaml`, '--workspace', ws, '--json',
+        ]);
+        if (!init.ok) throw new Error(init.error?.message ?? 'init failed');
+        const raw = await readWorkspaceFile('profile/profile.json');
+        const profile = JSON.parse(raw) as EngineProfile;
+        setData((d) => ({
+          ...d,
+          profile: { ...mapProfileToUi(profile, nowTime()), lastImport: 'profile.yaml (pasted)' },
+        }));
+        toast('Profile imported — saved to workspace');
+      } catch (err) {
+        toast(err instanceof Error ? err.message : String(err), 'info');
+      }
     },
 
-    saveDrafts: () => {
-      setData((d) => ({ ...d, drafts: { ...d.drafts, savedAt: nowTime() } }));
-      toast('Drafts saved to workspace');
+    saveDrafts: async () => {
+      const ws = data.workspace;
+      const evaluationId = data.jd.evaluationId;
+      if (!ws || !evaluationId) {
+        toast('Evaluate a job first', 'info');
+        return;
+      }
+      try {
+        const provider = data.provider === 'auto' ? 'mock' : data.provider;
+        let draftSetId = data.drafts.draftSetId;
+        if (!draftSetId) {
+          const draftRes = await runCli(buildDraftArgs(evaluationId, ws, provider));
+          if (!draftRes.ok || !draftRes.data) throw new Error(draftRes.error?.message ?? 'draft failed');
+          draftSetId = (draftRes.data as { draftSetId: string }).draftSetId;
+          const raw = await readWorkspaceFile(`applications/${draftSetId}/draft-set.json`);
+          const draftSet = JSON.parse(raw) as {
+            resume: { contentMd: string; cutLog: Array<{ removedLine: string; reason: string }> };
+            coverLetter: { contentMd: string };
+            disclosure: { enabled: boolean; text: string };
+          };
+          setData((d) => ({
+            ...d,
+            drafts: {
+              resume: draftSet.resume.contentMd,
+              cover: draftSet.coverLetter.contentMd,
+              disclosure: draftSet.disclosure.enabled,
+              savedAt: nowTime(),
+              draftSetId,
+              cutLog: draftSet.resume.cutLog.map((c, index) => ({
+                id: index,
+                target: 'resume' as const,
+                item: c.removedLine,
+                reason: c.reason,
+                restored: false,
+              })),
+            },
+          }));
+        }
+        await writeWorkspaceFile(`applications/${draftSetId}/resume.md`, data.drafts.resume);
+        await writeWorkspaceFile(`applications/${draftSetId}/cover-letter.md`, data.drafts.cover);
+        await writeWorkspaceFile(
+          `applications/${draftSetId}/draft-set.json`,
+          JSON.stringify(
+            {
+              resume: { contentMd: data.drafts.resume, cutLog: data.drafts.cutLog.map((c) => ({ removedLine: c.item, reason: c.reason })) },
+              coverLetter: { contentMd: data.drafts.cover },
+              disclosure: { enabled: data.drafts.disclosure, text: 'AI-assisted draft' },
+              status: 'draft',
+            },
+            null,
+            2,
+          ),
+        );
+        setData((d) => ({ ...d, drafts: { ...d.drafts, savedAt: nowTime() } }));
+        toast(`Drafts saved to workspace · ${draftSetId}`);
+      } catch (err) {
+        toast(err instanceof Error ? err.message : String(err), 'info');
+      }
     },
 
     restoreItem: (item: CutItem) => {
@@ -180,25 +328,37 @@ export function JobSageApp(props: JobSageAppProps = {}) {
       );
     },
 
-    exportDrafts: () => {
+    exportDrafts: async () => {
+      const ws = data.workspace;
+      const draftSetId = data.drafts.draftSetId;
+      if (!ws || !draftSetId) {
+        toast('Generate drafts before exporting', 'info');
+        return;
+      }
       if (data.exporting) return;
       setData((d) => ({ ...d, exporting: true }));
-      window.setTimeout(() => {
-        setData((dataNow) => {
-          const file = dataNow.exportFmt === 'PDF' ? 'resume-draft.pdf' : 'resume-draft.html';
-          const size = dataNow.exportFmt === 'PDF' ? '148 KB' : '61 KB';
-          const row = {
-            id: Date.now(),
-            format: dataNow.exportFmt,
-            file,
-            size,
-            time: nowTime(),
-            disclosure: dataNow.drafts.disclosure,
-          };
-          return { ...dataNow, exporting: false, exports: [row, ...dataNow.exports] };
-        });
-        toast(`Exported ${data.exportFmt === 'PDF' ? 'resume-draft.pdf' : 'resume-draft.html'} to ${data.workspace ?? ''}\\exports`);
-      }, 1300);
+      try {
+        const format = data.exportFmt === 'PDF' ? 'pdf' as const : 'html' as const;
+        const ext = format === 'pdf' ? 'pdf' : 'html';
+        const outPath = `${ws}/exports/resume-draft.${ext}`;
+        const res = await runCli(buildExportArgs(draftSetId, format, outPath, 'resume', ws));
+        if (!res.ok) throw new Error(res.error?.message ?? 'export failed');
+        const bytes = (res.data as { bytes?: number }).bytes ?? 0;
+        const size = bytes > 0 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : '—';
+        const row = {
+          id: Date.now(),
+          format: data.exportFmt,
+          file: `resume-draft.${ext}`,
+          size,
+          time: nowTime(),
+          disclosure: data.drafts.disclosure,
+        };
+        setData((d) => ({ ...d, exporting: false, exports: [row, ...d.exports] }));
+        toast(`Exported to ${outPath}`);
+      } catch (err) {
+        setData((d) => ({ ...d, exporting: false }));
+        toast(err instanceof Error ? err.message : String(err), 'info');
+      }
     },
   };
 
@@ -274,7 +434,7 @@ export function JobSageApp(props: JobSageAppProps = {}) {
           footer={
             <>
               <Button variant="ghost" onClick={actions.closeModal}>Cancel</Button>
-              <Button variant="primary" dataOdId="od-btn-import-confirm" onClick={actions.importProfile}>
+              <Button variant="primary" dataOdId="od-btn-import-confirm" onClick={() => actions.importProfile(importText)}>
                 Import profile
               </Button>
             </>
@@ -286,7 +446,8 @@ export function JobSageApp(props: JobSageAppProps = {}) {
           </p>
           <textarea
             className="ta ta-mono"
-            defaultValue={IMPORT_SAMPLE_YAML}
+            value={importText}
+            onChange={(e) => setImportText(e.target.value)}
             style={{ minHeight: 230 }}
             aria-label="YAML or JSON import"
             spellCheck={false}

@@ -59,6 +59,8 @@ export interface JobPostingState {
   text: string;
   status: EvaluateStatus;
   result: EvaluationResult | null;
+  /** Real engine evaluation id (P1 sidecar wiring). */
+  evaluationId: string | null;
 }
 
 export interface CutItem {
@@ -75,6 +77,8 @@ export interface DraftData {
   disclosure: boolean;
   savedAt: string;
   cutLog: CutItem[];
+  /** Real engine draft-set id (P1 sidecar wiring). */
+  draftSetId: string | null;
 }
 
 export interface ExportRow {
@@ -126,7 +130,7 @@ export interface AppActions {
   /** Runs the (mock) local evaluation pipeline for the pasted JD. */
   evaluate(): void;
   saveProfile(): void;
-  importProfile(): void;
+  importProfile(text: string): void;
   saveDrafts(): void;
   restoreItem(item: CutItem): void;
   exportDrafts(): void;
