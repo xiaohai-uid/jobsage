@@ -11,6 +11,7 @@ import {
   JobPostingSchema,
   SchemaViolationError,
   reviewAndRevise,
+  reviewAndReviseChinese,
 } from "@jobsage/engine";
 import { buildDeps, providerApiKeyEnvVar } from "../deps.js";
 import { ExitCode, fail, ok, printEnvelope } from "../io.js";
@@ -30,11 +31,12 @@ export function registerReview(program: Command): void {
     .description("Review a draft set (isolated reviewer); --revise applies feedback")
     .requiredOption("--draft <draftSetId>", "draft set id returned by draft")
     .option("--revise", "also produce a revised draft")
+    .option("--market <market>", "market overlay (e.g. china)")
     .option("--workspace <dir>", "workspace directory")
-    .option("--provider <auto|mock|claude-agent-sdk>", "LLM provider override")
+    .option("--provider <auto|mock|claude-agent-sdk|deepseek|qwen|glm|sensenova>", "LLM provider override")
     .option("--json", "machine-readable JSON output")
     .action(
-      async (opts: { draft: string; revise?: boolean; workspace?: string; provider?: string; json?: boolean }) => {
+      async (opts: { draft: string; revise?: boolean; market?: string; workspace?: string; provider?: string; json?: boolean }) => {
         const root = opts.workspace ?? defaultWorkspaceRoot();
         const ws = layout(root);
         await ensureLayout(ws);
@@ -76,15 +78,29 @@ export function registerReview(program: Command): void {
             return;
           }
 
-          const updated = await reviewAndRevise(
-            {
-              profile,
-              posting,
-              draftSet,
-              mode: opts.revise ? "review-and-revise" : "review-only",
-            },
-            deps,
-          );
+          const isChina = opts.market === "china" || profile.locale === "zh" || posting.extracted.language === "zh";
+
+          const updated = isChina
+            ? await reviewAndReviseChinese(
+                {
+                  profile,
+                  posting,
+                  draftSet,
+                  evaluation,
+                  revise: opts.revise,
+                },
+                deps,
+              )
+            : await reviewAndRevise(
+                {
+                  profile,
+                  posting,
+                  draftSet,
+                  mode: opts.revise ? "review-and-revise" : "review-only",
+                },
+                deps,
+              );
+
           const dir = join(ws.applicationsDir, updated.id);
           await writeJson(join(dir, "draft-set.json"), updated);
           await writeTextFile(join(dir, "resume.md"), updated.resume.contentMd);
@@ -96,6 +112,7 @@ export function registerReview(program: Command): void {
               draftSetId: updated.id,
               revised: Boolean(opts.revise),
               notesCount: updated.reviewNotes.length,
+              market: isChina ? "china" : "global",
             },
           });
           printEnvelope(

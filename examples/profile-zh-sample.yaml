@@ -1,0 +1,47 @@
+id: profile-zh-alex
+name: 陈思齐 (Alex Chen)
+contact:
+  email: alex.chen@example.com
+  phone: "13800138000"
+  location: 北京市海淀区
+education:
+  - institution: 清华大学
+    degree: 硕士
+    field: 计算机科学与技术
+    start: "2017"
+    end: "2020"
+    highlights:
+      - 优秀毕业生
+      - 参与分布式系统国家重点实验室研发
+experiences:
+  - org: 某一线头部互联网大厂
+    title: 资深前端架构师 / 平台技术负责人
+    start: "2020-07"
+    end: "2026-08"
+    location: 北京
+    bullets:
+      - 主导全集团前端设计系统与组件库基建，覆盖 20+ 业务线，研发效率提升 35%
+      - 推动微前端与 ESM 模块联邦架构落地，将大型中后台打包构建时间缩短 60%
+      - 主导 CI/CD 自动化视觉回归测试与代码规范工具链，保障万级页面零线上崩溃
+  - org: 某知名出海独角兽科技
+    title: 高级全栈开发工程师
+    start: "2017-09"
+    end: "2020-06"
+    location: 北京
+    bullets:
+      - 负责千万级 DAU 实时看板与 GraphQL 服务端研发
+      - 深度优化移动端首屏加载性能与 Webpack Bundle 体积，包体积精简 40%
+skills:
+  - TypeScript
+  - React
+  - Node.js
+  - Vue
+  - 前端架构与设计系统
+  - Web 性能优化
+  - GraphQL
+  - Docker / CI/CD
+portfolioLinks:
+  - label: 技术博客
+    url: https://alexchen.dev
+locale: zh
+version: 1

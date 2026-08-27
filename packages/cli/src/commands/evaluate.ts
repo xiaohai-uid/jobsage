@@ -9,6 +9,7 @@ import {
   JobPostingSchema,
   SchemaViolationError,
   evaluateFit,
+  evaluateChineseFit,
 } from "@jobsage/engine";
 import { buildDeps, providerApiKeyEnvVar } from "../deps.js";
 import { ExitCode, fail, ok, printEnvelope } from "../io.js";
@@ -26,11 +27,12 @@ export function registerEvaluate(program: Command): void {
     .command("evaluate")
     .description("Evaluate a stored posting against the candidate profile")
     .requiredOption("--posting <postingId>", "posting id returned by `posting add`")
+    .option("--market <market>", "market overlay (e.g. china)")
     .option("--workspace <dir>", "workspace directory")
-    .option("--provider <auto|mock|claude-agent-sdk>", "LLM provider override")
+    .option("--provider <auto|mock|claude-agent-sdk|deepseek|qwen|glm|sensenova>", "LLM provider override")
     .option("--json", "machine-readable JSON output")
     .action(
-      async (opts: { posting: string; workspace?: string; provider?: string; json?: boolean }) => {
+      async (opts: { posting: string; market?: string; workspace?: string; provider?: string; json?: boolean }) => {
         const root = opts.workspace ?? defaultWorkspaceRoot();
         const ws = layout(root);
         await ensureLayout(ws);
@@ -60,7 +62,11 @@ export function registerEvaluate(program: Command): void {
             return;
           }
 
-          const evaluation = await evaluateFit({ profile, posting }, deps);
+          const isChina = opts.market === "china" || profile.locale === "zh" || posting.extracted.language === "zh";
+          const evaluation = isChina
+            ? await evaluateChineseFit({ profile, posting }, deps)
+            : await evaluateFit({ profile, posting }, deps);
+
           await writeJson(
             join(ws.evaluationsDir, evaluation.id, "evaluation.json"),
             evaluation,
@@ -68,7 +74,7 @@ export function registerEvaluate(program: Command): void {
           await appendAudit(ws, {
             at: evaluation.createdAt,
             action: "evaluate.run",
-            detail: { evaluationId: evaluation.id, postingId: posting.id },
+            detail: { evaluationId: evaluation.id, postingId: posting.id, market: isChina ? "china" : "global" },
           });
           printEnvelope(
             ok({

@@ -6,7 +6,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { Command } from "commander";
-import { JobPostingSchema, type JobPosting } from "@jobsage/engine";
+import { JobPostingSchema, parseChineseJobPosting, type JobPosting } from "@jobsage/engine";
 import { ExitCode, fail, ok, printEnvelope } from "../io.js";
 import {
   appendAudit,
@@ -24,10 +24,11 @@ export function registerPosting(program: Command): void {
     .description("Add a job description from a file or stdin (user-paste only)")
     .option("--file <path>", "read posting text from a file")
     .option("--stdin", "read posting text from stdin")
+    .option("--market <market>", "market overlay (e.g. china)")
     .option("--workspace <dir>", "workspace directory")
     .option("--json", "machine-readable JSON output")
     .action(
-      async (opts: { file?: string; stdin?: boolean; workspace?: string; json?: boolean }) => {
+      async (opts: { file?: string; stdin?: boolean; market?: string; workspace?: string; json?: boolean }) => {
         const root = opts.workspace ?? defaultWorkspaceRoot();
         const ws = layout(root);
         await ensureLayout(ws);
@@ -46,17 +47,26 @@ export function registerPosting(program: Command): void {
           }
           if (!rawText) throw new Error("Posting text is empty");
 
-          const posting: JobPosting = {
-            id: `posting_${Date.now().toString(36)}`,
-            source: "user-paste",
-            rawText,
-            extracted: {
-              language: /[\u4e00-\u9fff]/.test(rawText) ? "zh" : "en",
-            },
-            keywords: [],
-            createdAt: new Date().toISOString(),
-          };
-          const parsed = JobPostingSchema.safeParse(posting);
+          const isChina = opts.market === "china" || /[一-鿿]/.test(rawText);
+          const id = `posting_${Date.now().toString(36)}`;
+          let postingEntity: JobPosting;
+
+          if (isChina) {
+            postingEntity = parseChineseJobPosting(rawText, id);
+          } else {
+            postingEntity = {
+              id,
+              source: "user-paste",
+              rawText,
+              extracted: {
+                language: "en",
+              },
+              keywords: [],
+              createdAt: new Date().toISOString(),
+            };
+          }
+
+          const parsed = JobPostingSchema.safeParse(postingEntity);
           if (!parsed.success) {
             throw new Error(`Invalid posting: ${parsed.error.message}`);
           }
@@ -66,12 +76,13 @@ export function registerPosting(program: Command): void {
           await appendAudit(ws, {
             at: parsed.data.createdAt,
             action: "posting.add",
-            detail: { postingId: parsed.data.id },
+            detail: { postingId: parsed.data.id, market: isChina ? "china" : "global" },
           });
           printEnvelope(
             ok({
               postingId: parsed.data.id,
               extracted: parsed.data.extracted,
+              keywords: parsed.data.keywords,
               keywordCount: parsed.data.keywords.length,
             }),
           );

@@ -308,4 +308,84 @@ describe("CLI US1 commands", () => {
     expect(out.ok).toBe(false);
     expect(out.error.hint).toContain("DEEPSEEK_API_KEY");
   });
+
+  it("runs full China market workflow end-to-end with Chinese profile, JD, evaluate, draft, and review", async () => {
+    process.env.JOBSAGE_WORKSPACE = dir;
+    process.env.JOBSAGE_PROVIDER = "mock";
+
+    const mockEvalZh = {
+      overall: { verdict: "strong", score: 5 },
+      dimensions: [
+        { name: "skills", score: 5, evidence: "精通 TypeScript/React/Node.js" },
+        { name: "exp", score: 5, evidence: "一线互联网大厂架构师经验" },
+        { name: "resp", score: 5, evidence: "主导设计系统与性能调优" },
+        { name: "seniority", score: 5, evidence: "清华硕士，5+年资历匹配" },
+        { name: "stack", score: 5, evidence: "技术栈高度契合" },
+      ],
+      strengths: ["清华硕士", "头部互联网大厂前端架构师", "设计系统与性能优化深厚积累"],
+      gaps: [],
+      recommendation: "重点突出微前端中台与大型组件库落地收益",
+    };
+
+    const mockResumeZh = JSON.stringify({
+      contentMd: "# 陈思齐\n\n## 核心经历\n- 主导设计系统，复用率提升 35%\n- 构建优化，打包耗时降低 60%",
+      cuts: [],
+    });
+
+    const mockCoverZh = JSON.stringify({
+      coverLetterMd: "尊敬的招聘负责人：您好！关注到贵司正在招聘资深前端架构师...",
+      greeting: {
+        platform: "boss",
+        openerText: "您好！看到贵司正在招聘资深前端架构师，我具备6年大厂前端中台与性能优化经验，主导过跨业务设计系统建设。非常期待与您沟通！",
+        coreMatches: ["6年大厂架构经验", "设计系统专家"],
+        wordCount: 78,
+      },
+    });
+
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([
+      JSON.stringify(mockEvalZh),
+      mockResumeZh,
+      mockCoverZh,
+    ]);
+
+    const sampleProfileZh = join(process.cwd(), "examples", "profile-zh-sample.yaml");
+    const sampleJdBoss = join(process.cwd(), "examples", "jd-boss-sample.txt");
+
+    // 1. init
+    const initCode = await main(["init", "--file", sampleProfileZh]);
+    expect(initCode).toBe(ExitCode.OK);
+
+    // 2. posting add
+    const addCode = await main(["posting", "add", "--file", sampleJdBoss, "--market", "china"]);
+    expect(addCode).toBe(ExitCode.OK);
+    const postingData = lastJson<{ data: { postingId: string; extracted: { language: string; roleTitle?: string } } }>();
+    expect(postingData.data.extracted.language).toBe("zh");
+    expect(postingData.data.extracted.roleTitle).toContain("架构师");
+    const postingId = postingData.data.postingId;
+
+    // 3. evaluate
+    const evalCode = await main(["evaluate", "--posting", postingId, "--market", "china"]);
+    expect(evalCode).toBe(ExitCode.OK);
+    const evaluationId = lastJson<{ data: { evaluationId: string; verdict: string } }>().data.evaluationId;
+
+    // 4. draft
+    process.env.JOBSAGE_MOCK_RESPONSES = JSON.stringify([
+      mockResumeZh,
+      mockCoverZh,
+    ]);
+    const draftCode = await main(["draft", "--evaluation", evaluationId, "--market", "china"]);
+    expect(draftCode).toBe(ExitCode.OK);
+    const draftSetId = lastJson<{ data: { draftSetId: string; greeting?: string } }>().data.draftSetId;
+
+    const greetingPath = join(dir, "applications", draftSetId, "greeting.txt");
+    const greetingContent = await readFile(greetingPath, "utf8");
+    expect(greetingContent).toContain("资深前端架构师");
+
+    // 5. export
+    const outPath = join(dir, "resume-zh.html");
+    const exportCode = await main(["export", "--draft", draftSetId, "--format", "html", "--out", outPath]);
+    expect(exportCode).toBe(ExitCode.OK);
+    const html = await readFile(outPath, "utf8");
+    expect(html).toContain("陈思齐");
+  });
 });

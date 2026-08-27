@@ -61,6 +61,27 @@ export JOBSAGE_PROVIDER=mock
 Real inference is env-gated in tests: set `JOBSAGE_TEST_LIVE=1` plus a provider
 key to run the live evaluate→draft end-to-end suite.
 
+
+## 中国市场包 (China Market Overlay)
+
+针对国内招聘生态（BOSS 直聘、猎聘、前程无忧、智联招聘等）提供深度本土化支持：
+
+- **平台 JD 智能解析**：自动提取岗位名称、薪资（如 `25-40K·15薪`）、学历经验门槛及核心技术关键词。
+- **五维本土化评估**：专业技能重合度、项目实战深度、职责胜任力、职级学历资历、技术栈工具链。
+- **STAR 量化简历优化**：突出业务量化成果与技术难点，自动精简低相关冗余经历。
+- **黄金 100 字直聊打招呼语**：专为 BOSS 直聘 / 猎聘设计，生成高回复率破冰话术（保存至 `greeting.txt`，供用户手动复制）。
+- **合规内建**：内容符合《人工智能生成合成内容标识办法》，纯本地运行，零数据泄露。
+
+```bash
+# 中文市场快速上手
+jobsage init --file examples/profile-zh-sample.yaml
+jobsage posting add --file examples/jd-boss-sample.txt --market china
+jobsage evaluate --posting <postingId> --market china --provider sensenova
+jobsage draft --evaluation <evaluationId> --market china --provider sensenova
+jobsage review --draft <draftSetId> --revise --market china --provider sensenova
+jobsage export --draft <draftSetId> --format html --out resume-zh.html
+```
+
 ## Testing & compliance
 
 ```bash

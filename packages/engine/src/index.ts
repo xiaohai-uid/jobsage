@@ -54,3 +54,23 @@ export { mdToSimpleHtml, renderDocument } from "./render/templates.js";
 export type { RenderInput, RenderOutput } from "./render/templates.js";
 export { renderPdf } from "./render/export.js";
 export type { RenderPdfInput } from "./render/export.js";
+
+// Markets (Thin Overlays)
+export * as ChinaMarket from "./markets/china/index.js";
+export {
+  parseChineseJobPosting,
+  evaluateChineseFit,
+  draftChineseApplication,
+  reviewAndReviseChinese,
+  buildDeterministicGreeting,
+  CHINA_AI_DISCLOSURE_TEXT,
+  CHINA_PRIVACY_NOTICE,
+} from "./markets/china/index.js";
+export type {
+  ChineseJobPostingExtracted,
+  ChineseChatGreeting,
+  ChineseApplicationResult,
+  ChineseEvaluateInput,
+  ChineseDraftInput,
+  ChineseReviewInput,
+} from "./markets/china/index.js";

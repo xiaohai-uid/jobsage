@@ -11,6 +11,7 @@ import {
   JobPostingSchema,
   SchemaViolationError,
   draftApplication,
+  draftChineseApplication,
 } from "@jobsage/engine";
 import { buildDeps, providerApiKeyEnvVar } from "../deps.js";
 import { ExitCode, fail, ok, printEnvelope } from "../io.js";
@@ -29,11 +30,12 @@ export function registerDraft(program: Command): void {
     .command("draft")
     .description("Generate tailored resume and cover letter drafts")
     .requiredOption("--evaluation <evaluationId>", "evaluation id returned by evaluate")
+    .option("--market <market>", "market overlay (e.g. china)")
     .option("--workspace <dir>", "workspace directory")
-    .option("--provider <auto|mock|claude-agent-sdk>", "LLM provider override")
+    .option("--provider <auto|mock|claude-agent-sdk|deepseek|qwen|glm|sensenova>", "LLM provider override")
     .option("--json", "machine-readable JSON output")
     .action(
-      async (opts: { evaluation: string; workspace?: string; provider?: string; json?: boolean }) => {
+      async (opts: { evaluation: string; market?: string; workspace?: string; provider?: string; json?: boolean }) => {
         const root = opts.workspace ?? defaultWorkspaceRoot();
         const ws = layout(root);
         await ensureLayout(ws);
@@ -70,11 +72,27 @@ export function registerDraft(program: Command): void {
             return;
           }
 
-          const draftSet = await draftApplication({ evaluation, profile, posting }, deps);
+          const isChina = opts.market === "china" || profile.locale === "zh" || posting.extracted.language === "zh";
+
+          let draftSet;
+          let greetingText: string | undefined;
+
+          if (isChina) {
+            const res = await draftChineseApplication({ evaluation, profile, posting }, deps);
+            draftSet = res.draftSet;
+            greetingText = res.greeting.openerText;
+          } else {
+            draftSet = await draftApplication({ evaluation, profile, posting }, deps);
+          }
+
           const dir = join(ws.applicationsDir, draftSet.id);
           await writeJson(join(dir, "draft-set.json"), draftSet);
           await writeTextFile(join(dir, "resume.md"), draftSet.resume.contentMd);
           await writeTextFile(join(dir, "cover-letter.md"), draftSet.coverLetter.contentMd);
+          if (greetingText) {
+            await writeTextFile(join(dir, "greeting.txt"), greetingText);
+          }
+
           await appendAudit(ws, {
             at: new Date().toISOString(),
             action: "draft.create",
@@ -82,15 +100,17 @@ export function registerDraft(program: Command): void {
               draftSetId: draftSet.id,
               evaluationId: evaluation.id,
               cutCount: draftSet.resume.cutLog.length,
+              market: isChina ? "china" : "global",
             },
           });
           printEnvelope(
             ok({
               draftSetId: draftSet.id,
-              resumeBullets: draftSet.resume.contentMd.split("\n").filter((l) => l.startsWith("- [ref:")).length,
-              coverLetterWords: draftSet.coverLetter.contentMd.split(/\s+/).length,
+              resumeBullets: draftSet.resume.contentMd.split("\n").filter((l) => l.startsWith("- ")).length,
+              coverLetterWords: draftSet.coverLetter.contentMd.length,
               cutCount: draftSet.resume.cutLog.length,
               disclosureEnabled: draftSet.disclosure.enabled,
+              greeting: greetingText,
             }),
           );
         } catch (err) {
