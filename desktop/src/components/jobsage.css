@@ -1,3 +1,33 @@
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: oklch(16% 0.012 250);
+    --surface: oklch(20% 0.014 250);
+    --fg: oklch(93% 0.005 250);
+    --muted: oklch(65% 0.01 250);
+    --muted-2: oklch(55% 0.01 250);
+    --border: oklch(28% 0.015 250);
+    --accent: oklch(64% 0.18 255);
+    --accent-strong: oklch(70% 0.18 255);
+    --hover: oklch(24% 0.015 250);
+    --active: oklch(27% 0.018 250);
+    --surface-2: oklch(23% 0.015 250);
+  }
+}
+[data-theme="dark"] {
+  --bg: oklch(16% 0.012 250);
+  --surface: oklch(20% 0.014 250);
+  --fg: oklch(93% 0.005 250);
+  --muted: oklch(65% 0.01 250);
+  --muted-2: oklch(55% 0.01 250);
+  --border: oklch(28% 0.015 250);
+  --accent: oklch(64% 0.18 255);
+  --accent-strong: oklch(70% 0.18 255);
+  --hover: oklch(24% 0.015 250);
+  --active: oklch(27% 0.018 250);
+  --surface-2: oklch(23% 0.015 250);
+}
+
 /* ==========================================================================
    JobSage — plain CSS (ported verbatim from jobsage-desktop.html)
    Visual system locked in brand-spec.md (direction: modern-minimal).

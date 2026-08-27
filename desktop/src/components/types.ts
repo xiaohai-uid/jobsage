@@ -74,6 +74,7 @@ export interface CutItem {
 export interface DraftData {
   resume: string;
   cover: string;
+  greeting?: string;
   disclosure: boolean;
   savedAt: string;
   cutLog: CutItem[];
