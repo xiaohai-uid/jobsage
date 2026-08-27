@@ -4,9 +4,9 @@
 
 ## 已实现
 
-- `packages/engine/src/adapters/openai-compatible.ts`：`OpenAiCompatibleLlmAdapter`，Node 内置 fetch + `response_format json_object`，覆盖 DeepSeek/Qwen/GLM（零新依赖）。
-- `packages/engine/src/adapters/providers.ts`：境内 provider 注册表（baseURL/model/envVar）。
-- `ProviderConfigSchema.providerId` 扩展 `deepseek|qwen|glm`。
+- `packages/engine/src/adapters/openai-compatible.ts`：`OpenAiCompatibleLlmAdapter`，Node 内置 fetch + `response_format json_object`，覆盖 DeepSeek/Qwen/GLM/SenseNova（零新依赖）。
+- `packages/engine/src/adapters/providers.ts`：境内 provider 注册表（baseURL/model/envVar，含 SenseNova `deepseek-v4-flash` / `token.sensenova.cn/v1`）。
+- `ProviderConfigSchema.providerId` 扩展 `deepseek|qwen|glm|sensenova`。
 - CLI `deps.ts` + 三个命令：统一 `providerApiKeyEnvVar` 预检（缺哪个 env 提示哪个），exit 3。
 - 桌面 Settings：provider 下拉 + 密钥说明（无输入框，不落盘）；`AppSettings.provider`/`ProviderId` 同步扩展。
 - compliance 白名单加入 `openai-compatible.ts`。
@@ -24,7 +24,9 @@
 - ✅ **GLM 免费（ZHIPU_API_KEY + glm-4-flash）evaluate→draft 端到端通过**（37.7s）。
   命令：`JOBSAGE_TEST_LIVE=1 JOBSAGE_LIVE_MODEL=glm-4-flash pnpm exec vitest run packages/engine/test/e2e/live-provider.test.ts`
   （key 从 `~/.config/luma-mcp/env` 加载，未落盘/未入库。）
-- 备选免费源：SenseNova `SENSENOVA_API_KEY`（Windows env，deepseek-v4-flash，token.sensenova.cn）——已确认存在，未在本会话实测。
+- ✅ **SenseNova 商汤日日新（SENSENOVA_API_KEY + deepseek-v4-flash @ token.sensenova.cn/v1）evaluate→draft 端到端通过**（35.4s）。
+  命令：`JOBSAGE_TEST_LIVE=1 JOBSAGE_LIVE_PROVIDER=sensenova pnpm exec vitest run packages/engine/test/e2e/live-provider.test.ts`
+  （key 从环境读取，零落盘/零泄漏。）
 
 ## 已知限速
 

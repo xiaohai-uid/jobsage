@@ -48,6 +48,7 @@ Settings screen):
 | deepseek | `DEEPSEEK_API_KEY` | deepseek-chat | api.deepseek.com |
 | qwen | `DASHSCOPE_API_KEY` | qwen-plus | DashScope compatible-mode |
 | glm | `ZHIPU_API_KEY` | glm-4-plus | open.bigmodel.cn/api/paas/v4 |
+| sensenova | `SENSENOVA_API_KEY` | deepseek-v4-flash | token.sensenova.cn/v1 |
 
 ```bash
 unset JOBSAGE_PROVIDER

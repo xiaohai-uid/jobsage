@@ -10,9 +10,13 @@ describe("resolveProvider registry (R3)", () => {
     expect(p.apiKeyEnvVar).toBe("DEEPSEEK_API_KEY");
   });
 
-  it("resolves qwen and glm", () => {
+  it("resolves qwen, glm, and sensenova", () => {
     expect(resolveProvider("qwen").apiKeyEnvVar).toBe("DASHSCOPE_API_KEY");
     expect(resolveProvider("glm").apiKeyEnvVar).toBe("ZHIPU_API_KEY");
+    const sn = resolveProvider("sensenova");
+    expect(sn.baseUrl).toBe("https://token.sensenova.cn/v1");
+    expect(sn.model).toBe("deepseek-v4-flash");
+    expect(sn.apiKeyEnvVar).toBe("SENSENOVA_API_KEY");
   });
 
   it("throws on unknown provider", () => {
@@ -22,7 +26,7 @@ describe("resolveProvider registry (R3)", () => {
 
 describe("ProviderConfigSchema providerId enum", () => {
   it("accepts domestic + existing providers", () => {
-    for (const id of ["deepseek", "qwen", "glm", "claude-agent-sdk", "mock"]) {
+    for (const id of ["deepseek", "qwen", "glm", "sensenova", "claude-agent-sdk", "mock"]) {
       const r = ProviderConfigSchema.safeParse({
         providerId: id,
         model: "m",

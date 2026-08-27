@@ -6,5 +6,6 @@ describe("desktop provider options (T020)", () => {
     expect(PROVIDER_DESC.deepseek).toContain("DEEPSEEK_API_KEY");
     expect(PROVIDER_DESC.qwen).toContain("DASHSCOPE_API_KEY");
     expect(PROVIDER_DESC.glm).toContain("ZHIPU_API_KEY");
+    expect(PROVIDER_DESC.sensenova).toContain("SENSENOVA_API_KEY");
   });
 });

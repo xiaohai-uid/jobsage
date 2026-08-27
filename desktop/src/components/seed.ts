@@ -144,6 +144,7 @@ export const PROVIDER_DESC: Record<ProviderId, string> = {
   deepseek: 'DeepSeek via OpenAI-compatible endpoint. Needs DEEPSEEK_API_KEY in the environment.',
   qwen: 'Qwen (DashScope) via OpenAI-compatible endpoint. Needs DASHSCOPE_API_KEY in the environment.',
   glm: 'GLM (Zhipu) via OpenAI-compatible endpoint. Needs ZHIPU_API_KEY in the environment.',
+  sensenova: 'SenseNova (SenseTime) via OpenAI-compatible endpoint. Needs SENSENOVA_API_KEY in the environment.',
 };
 
 export function nowTime(): string {

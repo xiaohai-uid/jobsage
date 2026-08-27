@@ -21,7 +21,8 @@ export type ProviderFlag =
   | "claude-agent-sdk"
   | "deepseek"
   | "qwen"
-  | "glm";
+  | "glm"
+  | "sensenova";
 
 export function resolveProvider(flag?: string): Exclude<ProviderFlag, "auto"> {
   const chosen = (flag && flag !== "auto" ? flag : process.env.JOBSAGE_PROVIDER) ?? "claude-agent-sdk";
@@ -38,6 +39,7 @@ export function providerApiKeyEnvVar(provider: string): string | null {
     case "deepseek":
     case "qwen":
     case "glm":
+    case "sensenova":
       return resolveDomesticProvider(provider).apiKeyEnvVar;
     default:
       return null;

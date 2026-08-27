@@ -41,6 +41,7 @@ export function SettingsView({ data, actions }: ViewProps) {
             <option value="deepseek">deepseek (DeepSeek)</option>
             <option value="qwen">qwen (DashScope)</option>
             <option value="glm">glm (Zhipu)</option>
+            <option value="sensenova">sensenova (SenseTime / 商汤日日新)</option>
           </select>
           <Icon n="chevron" size={14} />
         </div>
@@ -57,7 +58,8 @@ export function SettingsView({ data, actions }: ViewProps) {
               <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>ANTHROPIC_API_KEY</code>
               for Claude, or <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>DEEPSEEK_API_KEY</code> /{' '}
               <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>DASHSCOPE_API_KEY</code> /{' '}
-              <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>ZHIPU_API_KEY</code>
+              <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>ZHIPU_API_KEY</code> /{' '}
+              <code style={{ fontFamily: 'var(--mono)', fontSize: '11.5px' }}>SENSENOVA_API_KEY</code>
               for domestic providers) at runtime — it never touches your workspace.
             </p>
           </div>

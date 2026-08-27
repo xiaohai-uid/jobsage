@@ -5,7 +5,7 @@
  */
 
 export type ViewId = 'profile' | 'evaluate' | 'draft' | 'export' | 'settings';
-export type ProviderId = 'mock' | 'claude-agent-sdk' | 'auto' | 'deepseek' | 'qwen' | 'glm';
+export type ProviderId = 'mock' | 'claude-agent-sdk' | 'auto' | 'deepseek' | 'qwen' | 'glm' | 'sensenova';
 export type ModalId = 'folder' | 'create' | 'import' | 'switch' | null;
 export type ExportFormat = 'PDF' | 'HTML';
 export type EvaluateStatus = 'idle' | 'running' | 'done';

@@ -3,7 +3,7 @@
  * Contract: specs/003-llm-inference/research.md R3
  */
 export interface ProviderMeta {
-  id: "deepseek" | "qwen" | "glm";
+  id: "deepseek" | "qwen" | "glm" | "sensenova";
   baseUrl: string;
   model: string;
   apiKeyEnvVar: string;
@@ -27,6 +27,12 @@ const REGISTRY: Record<string, ProviderMeta> = {
     baseUrl: "https://open.bigmodel.cn/api/paas/v4",
     model: "glm-4-plus",
     apiKeyEnvVar: "ZHIPU_API_KEY",
+  },
+  sensenova: {
+    id: "sensenova",
+    baseUrl: "https://token.sensenova.cn/v1",
+    model: "deepseek-v4-flash",
+    apiKeyEnvVar: "SENSENOVA_API_KEY",
   },
 };
 

@@ -15,7 +15,8 @@ const LIVE = process.env.JOBSAGE_TEST_LIVE === "1";
 const hasKey = Boolean(
   process.env.DEEPSEEK_API_KEY ||
     process.env.DASHSCOPE_API_KEY ||
-    process.env.ZHIPU_API_KEY,
+    process.env.ZHIPU_API_KEY ||
+    process.env.SENSENOVA_API_KEY,
 );
 const gated = LIVE && hasKey ? describe : describe.skip;
 
@@ -42,11 +43,16 @@ const posting: JobPosting = {
 
 gated("live domestic provider (env-gated)", () => {
   it("evaluate → draft end-to-end with a real model", async () => {
-    const providerId =
-      (process.env.DEEPSEEK_API_KEY ? "deepseek" : process.env.DASHSCOPE_API_KEY ? "qwen" : "glm") as
-        | "deepseek"
-        | "qwen"
-        | "glm";
+    const providerId = (
+      process.env.JOBSAGE_LIVE_PROVIDER ||
+      (process.env.SENSENOVA_API_KEY
+        ? "sensenova"
+        : process.env.DEEPSEEK_API_KEY
+          ? "deepseek"
+          : process.env.DASHSCOPE_API_KEY
+            ? "qwen"
+            : "glm")
+    ) as "deepseek" | "qwen" | "glm" | "sensenova";
     const model = process.env.JOBSAGE_LIVE_MODEL;
     const adapter = new OpenAiCompatibleLlmAdapter({
       meta: resolveProvider(providerId),

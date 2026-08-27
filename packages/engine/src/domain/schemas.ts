@@ -148,6 +148,7 @@ export const ProviderConfigSchema = z.object({
     "deepseek",
     "qwen",
     "glm",
+    "sensenova",
     "claude-agent-sdk",
     "mock",
   ]),
