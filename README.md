@@ -6,7 +6,7 @@
 
 This is the **P0 engine + CLI**. It turns your local candidate profile + a job
 description into: fit evaluation → tailored resume/cover letter drafts → review
-→ PDF export. Everything stays on your machine; you bring your own model key.
+→ PDF export. The workspace stores the profile, job postings and drafts locally. The offline walkthrough uses mock responses. When you select a hosted model, its API receives the content included in the inference request.
 
 ## Status
 
