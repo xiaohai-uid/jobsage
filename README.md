@@ -19,14 +19,21 @@ when a Chromium binary is available to Playwright.
 - For real inference: `ANTHROPIC_API_KEY` (or another adapter later)
 - For PDF export: a Chromium binary available to Playwright (`npx playwright install chromium` if needed)
 
-## Quickstart (offline, mock provider)
+## Try the offline CLI from a fresh clone
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm build
+pnpm exec vitest run packages/cli/test/commands.test.ts
+```
 
+This suite creates temporary workspaces and supplies its own mock responses. It covers profile import, job postings, fit evaluation and draft review. To work through the commands by hand in Bash, run the following from the repository root. The shell function uses the CLI you just built.
+
+```bash
+jobsage() { node packages/cli/dist/index.js "$@"; }
 export JOBSAGE_PROVIDER=mock
-# Set JOBSAGE_MOCK_RESPONSES to a JSON array of canned LLM responses for demos/tests.
+# For evaluate/draft/review, supply the canned responses used by the corresponding test.
+# See packages/cli/test/commands.test.ts for the required JSON payloads.
 
 jobsage init --file examples/profile-sample.yaml
 jobsage posting add --file examples/jd-sample.txt
